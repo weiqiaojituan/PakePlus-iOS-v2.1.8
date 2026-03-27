@@ -1,88 +1,174 @@
 <!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <link rel="stylesheet" href="./static/css/styles.css" />
-        <meta
-            http-equiv="Content-Security-Policy"
-            content="default-src * 'unsafe-inline' 'unsafe-eval'"
-        />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Tauri App</title>
-        <script src="./static/js/main.js"></script>
-    </head>
-    <body>
-        <main class="container">
-            <h1>Welcome to TauriMan</h1>
+<html lang="zh-CN">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+	<title>切氧参数计算器</title>
+	<style>
+		:root {
+			--primary: #3498db; --success: #2ecc71; --warning: #f39c12; --danger: #e74c3c;
+			--bg: #f5f7fa; --card: #ffffff; --dark-blue: #2c3e50;
+		}
+		* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+		body { background-color: var(--bg); font-family: -apple-system, sans-serif; padding-bottom: 140px; color: #2d3436; }
+		.header { background: var(--dark-blue); color: white; padding: 15px; text-align: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+		.header h1 { font-size: 1.1rem; letter-spacing: 1px; }
+		.container { padding: 12px; max-width: 600px; margin: 0 auto; }
+		
+		details { background: var(--card); border-radius: 8px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #eee; }
+		summary { padding: 12px; font-size: 0.9rem; font-weight: bold; color: var(--primary); cursor: pointer; outline: none; }
+		.config-grid { padding: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; border-top: 1px solid #f0f0f0; background: #fafafa; }
+		.config-item label { display: block; font-size: 0.7rem; color: #7f8c8d; margin-bottom: 3px; }
+		.config-item input { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.85rem; }
 
-            <div class="row">
-                <a
-                    href="https://tauri.app"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                >
-                    <img
-                        src="./assets/tauri.svg"
-                        class="logo tauri"
-                        alt="Tauri logo"
-                    />
-                </a>
-                <a
-                    href="https://pakeplus.com/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                >
-                    <img
-                        src="https://hk.gh-proxy.org/https://github.com/Sjj1024/PakePlus/blob/main/app-icon.png"
-                        class="logo vanilla"
-                        alt="JavaScript logo"
-                    />
-                </a>
-            </div>
-            <p>Click to get data</p>
-            <form class="row" id="greet-form">
-                <input id="greet-input" placeholder="Enter a name..." />
-                <button type="submit" id="getdata">GET DATA</button>
-            </form>
-            <div class="functions">
-                <a href="./book.html" target="_self">跳转到book.html</a>
-                <a
-                    href="https://www.baidu.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    >跳到百度blank
-                </a>
-                <a
-                    href="https://www.baidu.com"
-                    target="_self"
-                    rel="noopener noreferrer"
-                >
-                    跳到百度self
-                </a>
-                <button onclick="sayHello()">点击我</button>
-                <button onclick="sayHello()">下载文件</button>
-                <button onclick="sayHello()">上传文件</button>
-                <button onclick="sayHello()">访问相机</button>
-                <button onclick="sayHello()">访问麦克风</button>
-                <button onclick="sayHello()">访问相册</button>
-                <button class="btn" onclick="openWechat()">打开微信</button>
-                <button class="btn" onclick="openWechatScan()">
-                    打开扫一扫
-                </button>
-                <button class="btn" onclick="openZhihu()">打开知乎</button>
-                <button onclick="sayHello()">打开抖音</button>
-                <button onclick="sayHello()">用浏览器打开</button>
-                <button>打开知乎</button>
-            </div>
-            <p id="greet-msg"></p>
-            <img src="./static/image/cursor.jpeg" alt="logo" />
-            <video
-                src="https://hk.gh-proxy.org/https://github.com/Sjj1024/PakePlus/blob/main/docs/static/videos/pakeplus.mp4"
-                autoplay
-                controls
-                style="width: 100%; height: 100%"
-            ></video>
-            <audio src="./static/music/yin.mp3" controls></audio>
-        </main>
-    </body>
+		.data-card { background: var(--card); border-radius: 12px; margin-bottom: 15px; padding: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-left: 5px solid var(--primary); position: relative; }
+		.data-card.manual-mode { border-left-color: var(--warning); }
+		.card-header { display: flex; justify-content: space-between; margin-bottom: 15px; align-items: center; }
+		.mode-btn { padding: 6px 14px; border-radius: 20px; border: none; font-size: 0.75rem; font-weight: bold; color: white; cursor: pointer; transition: 0.2s; }
+		.mode-auto { background: var(--primary); }
+		.mode-manual { background: var(--warning); }
+
+		.grid-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+		.field label { display: block; font-size: 0.75rem; color: #95a5a6; margin-bottom: 4px; font-weight: 500; }
+		.field .unit { font-size: 0.65rem; color: #bdc3c7; margin-left: 2px; }
+		.edit-input { width: 100%; padding: 10px; border: 1px solid #dfe6e9; border-radius: 8px; font-size: 1rem; font-weight: bold; color: #2d3436; }
+		.val { font-size: 1.1rem; font-weight: 800; color: #2d3436; font-family: 'Consolas', monospace; padding: 4px 0; }
+		.res-highlight { color: var(--primary); }
+		.res-success { color: var(--success); }
+		.res-steam { color: #9b59b6; }
+		.bottom-bar { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 10px 15px; box-shadow: 0 -2px 15px rgba(0,0,0,0.1); z-index: 1000; }
+		.btn { flex: 1; padding: 12px; border: none; border-radius: 10px; color: white; font-weight: bold; cursor: pointer; }
+		.btn-calc { background: var(--dark-blue); flex: 1.5; }
+		.footer-info { text-align: center; color: #95a5a6; font-size: 0.7rem; }
+		#toast { position: fixed; top: 20%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.75); color: white; padding: 10px 20px; border-radius: 20px; z-index: 2000; display: none; }
+	</style>
+</head>
+<body>
+	<div class="header"><h1>切氧参数计算器</h1></div>
+	<div id="toast">提示</div>
+	<div class="container">
+		<details>
+			<summary>⚙️ 核心系统系数设置</summary>
+			<div class="config-grid">
+				<div class="config-item"><label>风量系数 (Nm³/h·Hz)</label><input type="number" id="windPerHz" value="378"></div>
+				<div class="config-item"><label>加煤系数 (kg/h·Hz)</label><input type="number" id="coalPerHz" value="1300"></div>
+				<div class="config-item"><label>加煤 K1</label><input type="number" id="coalK1" value="1.05"></div>
+				<div class="config-item"><label>加煤 K2</label><input type="number" id="coalK2" value="0.0017"></div>
+				<div class="config-item"><label>加煤 K3</label><input type="number" id="coalK3" value="3.23"></div>
+				<div class="config-item"><label>蒸汽体积系数</label><input type="number" id="volFactor" value="1.244"></div>
+				<div class="config-item"><label>固定碳 FC (%)</label><input type="number" id="fixedCarbon" value="65"></div>
+			</div>
+		</details>
+		<div id="cardContainer"></div>
+	</div>
+	<div class="bottom-bar">
+		<button class="btn" onclick="addRow('auto')">＋自动</button>
+		<button class="btn" onclick="addRow('manual')">＋手动</button>
+		<button class="btn btn-calc" onclick="performCalculation(true)">⚡ 计算</button>
+		<button class="btn" onclick="resetAll()">↺ 重置</button>
+		<div class="footer-info">数据仅供参考：刘飞</div>
+	</div>
+
+<script>
+	let tableData = [];
+	function showToast(msg){const t=document.getElementById('toast');t.innerText=msg;t.style.display='block';setTimeout(()=>t.style.display='none',1400);}
+	function saveAll(){
+		const cfg={windPerHz:+document.getElementById('windPerHz').value,coalPerHz:+document.getElementById('coalPerHz').value,coalK1:+document.getElementById('coalK1').value,coalK2:+document.getElementById('coalK2').value,coalK3:+document.getElementById('coalK3').value,volFactor:+document.getElementById('volFactor').value,fixedCarbon:+document.getElementById('fixedCarbon').value};
+		localStorage.setItem('calc_config',JSON.stringify(cfg));localStorage.setItem('calc_data',JSON.stringify(tableData));
+	}
+	function loadAll(){
+		try{const cfg=JSON.parse(localStorage.getItem('calc_config'));const data=JSON.parse(localStorage.getItem('calc_data'));if(cfg){document.getElementById('windPerHz').value=cfg.wPerHz??378;document.getElementById('coalPerHz').value=cfg.cHz??1300;document.getElementById('coalK1').value=cfg.k1??1.05;document.getElementById('coalK2').value=cfg.k2??0.0017;document.getElementById('coalK3').value=cfg.k3??3.23;document.getElementById('volFactor').value=cfg.vF??1.244;document.getElementById('fixedCarbon').value=cfg.fc??65;}if(data&&data.length)tableData=data;else tableData=[{mode:'auto',fan:50,o2:21,steamRatio:0.35,manualTotalWind:30000,manualTargetO2:35}];}catch(e){tableData=[{mode:'auto',fan:50,o2:21,steamRatio:0.35,manualTotalWind:30000,manualTargetO2:35}];}
+	}
+	function renderCards(){
+		const container=document.getElementById('cardContainer');container.innerHTML='';tableData.forEach((item,index)=>{const isM=item.mode==='manual';const card=document.createElement('div');card.className=`data-card ${isM?'manual-mode':''}`;
+		card.innerHTML=`
+			<div class="card-header">
+				<button class="mode-btn" onclick="toggleMode(${index})">${isM?'模式：手动反推':'模式：自动计算'}</button>
+				<span style="color:#e74c3c;cursor:pointer" onclick="delRow(${index})">删除 🗑️</span>
+			</div>
+			<div class="grid-layout">
+				${isM?`
+				<div class="field" style="grid-column: span 2;"><label>总气量<span class="unit">Nm³/h</span></label><input type="number" class="edit-input" value="${item.manualTotalWind||0}" oninput="updateVal(${index},'manualTotalWind',this.value)"></div>
+				<div class="field"><label>鼓风机频率<span class="unit">Hz</span></label><input type="number" class="edit-input" value="${item.fan||0}" oninput="updateVal(${index},'fan',this.value)"></div>
+				<div class="field"><label>设定氧气配比<span class="unit">%</span></label><input type="number" class="edit-input" value="${item.manualTargetO2||21}" oninput="updateVal(${index},'manualTargetO2',this.value)"></div>
+				<div class="field"><label>鼓风机风量</label><div class="val" id="windFlow-${index}">-</div></div>
+				<div class="field"><label>兑入氧气量</label><div class="val res-highlight" id="addO2-${index}">-</div></div>
+				<div class="field"><label>兑入蒸汽量</label><div class="val res-steam" id="steam-${index}">-</div></div>
+				<div class="field"><label>总气量</label><div class="val" id="totalWind-${index}">-</div></div>
+				<div class="field" style="grid-column:span2"><label>估算煤量(固定碳模式)</label><div class="val res-success" id="coal-${index}">-</div></div>
+				`:``}
+				${!isM?`
+				<div class="field"><label>风机频率(Hz)</label><input type="number" class="edit-input" value="${item.fan}" oninput="updateVal(${index},'fan',this.value)"></div>
+				<div class="field"><label>目标氧浓度(%)</label><input type="number" class="edit-input" value="${item.o2}" oninput="updateVal(${index},'o2',this.value)"></div>
+				<div class="field"><label>蒸汽比例</label><input type="number" class="edit-input" value="${item.steamRatio}" oninput="updateVal(${index},'steamRatio',this.value)"></div>
+				<div class="field"><label>计算风机频率</label><div class="val" id="fanHz-${index}">-</div></div>
+				<div class="field"><label>风机风量</label><div class="val" id="windFlow-${index}">-</div></div>
+				<div class="field"><label>兑入氧气</label><div class="val" id="addO2-${index}">-</div></div>
+				<div class="field"><label>氧气总配比</label><div class="val" id="totalO2Ratio-${index}">-</div></div>
+				<div class="field"><label>计算加煤</label><div class="val" id="coal-${index}">-</div></div>
+				<div class="field"><label>加煤频率</label><div class="val" id="coalHz-${index}">-</div></div>
+				<div class="field"><label>计算蒸汽</label><div class="val" id="steam-${index}">-</div></div>
+				<div class="field"><label>系统总风量</label><div class="val" id="totalWind-${index}">-</div></div>
+				`:``}
+			</div>
+		`;container.appendChild(card);});performCalculation(false);
+	}
+	function updateVal(index,key,val){tableData[index][key]=Number(val)||0;performCalculation(false);saveAll();}
+	function toggleMode(index){tableData[index].mode=tableData[index].mode==='auto'?'manual':'auto';renderCards();saveAll();showToast('已切换模式');}
+	function performCalculation(click){
+		const cfg={wHz:+document.getElementById('windPerHz').value,cHz:+document.getElementById('coalPerHz').value,k1:+document.getElementById('coalK1').value,k2:+document.getElementById('coalK2').value,k3:+document.getElementById('coalK3').value,vF:+document.getElementById('volFactor').value,fc:+document.getElementById('fixedCarbon').value};
+		tableData.forEach((item,index)=>{
+			let wind=0,addO2=0,coal=0,steam=0,totalGas=0,totalO2Ratio=0;
+			if(item.mode==='manual'){
+				const total=item.manualTotalWind||0;
+				const fanHz=item.fan||0;
+				const targetO2=Math.max(21,item.manualTargetO2||21)/100;
+				wind=fanHz*cfg.wHz;
+				const oAir=wind*0.21;
+				totalGas=total;
+
+				addO2 = totalGas * targetO2 - oAir;
+				if(addO2 < 0) addO2 = 0;
+
+				const steamVol = totalGas - wind - addO2;
+				steam = steamVol * 0.804;
+				if(steam < 0) steam = 0;
+
+				const oTotal=oAir+addO2;
+				const BASE_O2_PER_KG=0.38936;
+				const BASE_FC=65;
+				const oxygenPerKg=BASE_O2_PER_KG*(cfg.fc/BASE_FC);
+				coal=oTotal/oxygenPerKg;
+			}else{
+				const sRatio=item.steamRatio||0.35;
+				wind=(item.fan||0)*cfg.wHz;
+				const targetO2=Math.max(21,item.o2||21);
+				if(targetO2>21){
+					addO2=(wind*0.21-wind*(targetO2/100))/((targetO2/100)-1);
+				}
+				const K=(cfg.k1-cfg.k2*targetO2)*cfg.k3;
+				coal=K*(wind*0.21+addO2);
+				steam=coal*sRatio;
+				totalGas=wind+addO2+steam*cfg.vF;
+				totalO2Ratio=totalGas>0?((wind*0.21+addO2)/totalGas*100).toFixed(2):0;
+			}
+			document.getElementById(`windFlow-${index}`).innerText=Math.round(wind)+' Nm³/h';
+			document.getElementById(`addO2-${index}`).innerText=Math.round(addO2)+' Nm³/h';
+			document.getElementById(`coal-${index}`).innerText=Math.round(coal)+' kg/h';
+			document.getElementById(`steam-${index}`).innerText=Math.round(steam)+' kg/h';
+			document.getElementById(`totalWind-${index}`).innerText=Math.round(totalGas)+' Nm³/h';
+			if(item.mode==='auto'){
+				document.getElementById(`fanHz-${index}`).innerText=(wind/cfg.wHz).toFixed(2);
+				document.getElementById(`coalHz-${index}`).innerText=(coal/cfg.cHz).toFixed(2);
+				document.getElementById(`totalO2Ratio-${index}`).innerText=totalO2Ratio+' %';
+			}
+		});
+		if(click)showToast('✅ 计算完成');
+	}
+	function addRow(mode){tableData.push({mode,fan:50,o2:21,steamRatio:0.35,manualTotalWind:30000,manualTargetO2:35});renderCards();saveAll();showToast('已新增一行');}
+	function delRow(i){if(tableData.length>1){tableData.splice(i,1);renderCards();saveAll();showToast('已删除该行');}else showToast('至少保留一行');}
+	function resetAll(){localStorage.removeItem('calc_data');localStorage.removeItem('calc_config');loadAll();renderCards();saveAll();showToast('已重置为默认值');}
+	window.onload=()=>{loadAll();renderCards();document.querySelectorAll('.config-item input').forEach(i=>{i.addEventListener('change',()=>{performCalculation(false);saveAll();});});};
+</script>
+</body>
 </html>
